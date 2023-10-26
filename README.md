@@ -37,13 +37,3 @@ My ideas for my final project are...
 | Get 3-column layout in Streamlit. Add visualizations of the meta-analysis results with `matplotlib` | 8        |               |                           |
 | Add readability checker with [`py-readability-metrics`](https://levelup.gitconnected.com/determine-the-reading-level-of-a-text-with-python-d2f9dccee6bf) | 9        |               |                           |
 |                                                              | 10       |               |                           |
-
-| Task                                                         | Week due | Progress      | Notes                                                        |
-| ------------------------------------------------------------ | -------- | ------------- | ------------------------------------------------------------ |
-| Look for government organizational charts, look into image recognition packages | 4        | Done          | No viable free image recognition found. Use [this chart](chrome-extension://efaidnbmnnnibpcajpcglclefindmkaj/https://www.usgovernmentmanual.gov/ReadLibraryItem.ashx?SFN=Myz95sTyO4rJRM/nhIRwSw==&SF=VHhnJrOeEAnGaa/rtk/JOg==) |
-| Parse PDF of a known organizational chart using `requests` and `tika`. Extract department names | 5        | Working on it |                                                              |
-| Organize department names into a tree based on y-position or reading order. For one of the departments, perform a Google search via `requests` and find their organizational chart. | 6        |               |                                                              |
-| Scale approach to all departments on original org chart. Connect individual charts together | 7        |               |                                                              |
-| Using `igraph`, allow user to navigate the whole organizational chart | 8        |               |                                                              |
-| Make pretty interface (with `streamlit`, if time)            | 9        |               |                                                              |
-| Writeup                                                      | 10       |               |                                                              |
