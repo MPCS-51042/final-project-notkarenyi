@@ -33,7 +33,7 @@ My ideas for my final project are...
 | Setup environments, look into LLM packages                   | 4        | Done          | No viable free LLMs found |
 | Figure out `streamlit` and get minimal working page          | 5        | Working on it |                           |
 | Connect to `openalex` and filter for new papers in topic of interest. Output to folder for human review | 6        |               |                           |
-| Research how to do Cochrane meta-analysis and attempt to summarize papers (extract methods, population, etc. using `spacy`) | 7        |               |                           |
-| Get 3-column layout in Streamlit. Add visualizations of the meta-analysis results with `matplotlib` | 8        |               |                           |
-| Add readability checker with [`py-readability-metrics`](https://levelup.gitconnected.com/determine-the-reading-level-of-a-text-with-python-d2f9dccee6bf) | 9        |               |                           |
-|                                                              | 10       |               |                           |
+| Attempt to summarize papers (extract methods, population, etc. using [`spacy` or `gensim`](https://www.turing.com/kb/5-powerful-text-summarization-techniques-in-python)) | 7        |               |                           |
+| Research how to do Cochrane meta-analysis and summarize any relevant statistics (eg, categorize as significant or non-significant) | 8        |               |                           |
+| Get 3-column layout in Streamlit. Add visualizations of the meta-analysis results with `matplotlib` | 9        |               |                           |
+| Add readability checker with [`py-readability-metrics`](https://levelup.gitconnected.com/determine-the-reading-level-of-a-text-with-python-d2f9dccee6bf) | 10       |               |                           |
