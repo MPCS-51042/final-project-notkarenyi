@@ -22,7 +22,7 @@ My ideas for my final project are...
    4. Or, assuming, you already have a meta-analysis, focus on editing and presenting it for public consumption. Summarize on 3 levels using **LLM API**. Create a web app including visualizations using **pandas** and **streamlit**.
 
 
-3. Use web scraping (?) (**requests**, **beautifulsoup**) to get video recordings of Chicago city council meetings (could assume we already have video files if this is too ambitious), use **Whisper** to transcribe the video (may need an intermediate step to divorce audio file from video file), use **LLM (Otter?) API** to summarize the notes, generate a poll of major decision points (how?), and send the poll as an automated email where a subscribed citizen can send in their approval or disapproval of each meeting.
+3. Use web scraping (**requests**, **beautifulsoup**) to get video recordings of Chicago city council meetings (could assume we already have video files if this is too ambitious), use **Whisper** to transcribe the video (may need an intermediate step to divorce audio file from video file), use **LLM (Otter?) API** to summarize the notes, generate a poll of major decision points (how?), and send the poll as an automated email where a subscribed citizen can send in their approval or disapproval of each meeting.
 
 ## To-do list
 
@@ -37,3 +37,4 @@ My ideas for my final project are...
 | Research how to do Cochrane meta-analysis and summarize any relevant statistics (eg, categorize as significant or non-significant) | 8        |               |                           |
 | Get 3-column layout in Streamlit. Add visualizations of the meta-analysis results with `matplotlib` | 9        |               |                           |
 | Add readability checker with [`py-readability-metrics`](https://levelup.gitconnected.com/determine-the-reading-level-of-a-text-with-python-d2f9dccee6bf) | 10       |               |                           |
+
