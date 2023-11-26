@@ -113,6 +113,6 @@ text = [x['fullText'] for x in papers]
 df = pd.DataFrame({'title':titles,
                    'abstract':abstracts,
                    'url':links,
-                   'text':abstracts})
+                   'text':text})
 
 df.to_json(f'core-tutors-{datetime.date.today()}.json')
