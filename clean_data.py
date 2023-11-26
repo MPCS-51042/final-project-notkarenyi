@@ -11,47 +11,70 @@ Process pre-gathered data
 import pandas as pd
 import re
 import numpy as np
+import datetime
 
 #%% read data
 
-df = pd.read_json('core-tutors-2023-11-25.json')
+df = pd.read_json('core-tutors-2023-11-26.json')
 
 # get paper-length papers
-df = df.loc[[len(x)>5000 for x in df['text']]]
+df['len'] = [len(x) if not x==None else 0 for x in df['text']]
+df = df.loc[df['len']>20000]
 
 df = df.reset_index()
 
-#%% extract methods from full text
+#%% extract methods and results from full text
 
 # df['text_clean'] = [x]
 
 # methods = df['text'][:20]
 
+def truncate(text,start=.15,end=.8):
+     return text[round(len(text)*start):round(len(text)*end)]
+
 # remove table of contents
 methods = [re.sub('[TABLEOFCONTENTStableofcontents ]{17}.*[\. …]{5,}','',x) for x in df['text']]
 
-methods = [re.search('(Design|Method)[\S \n]+Result',x) for x in methods]
+# cut as much of intro and references as possible
+methods = [truncate(t) for t in methods ]
 
-methods
+methods = [re.search('(Method|Research method)[\S \n]+(Discussion|Conclusion)',x) for x in methods]
 
-#%%
+methods[:10]
 
-for i,method in enumerate(methods):
+#%% 
+
+alternate = '(Design|and method)[\S \n]+(Discussion|Conclusion)'
+run_length = 100000
+
+for i,method in enumerate(methods[:run_length]):
     text = df['text'][i]
+
+    # try alternate names for methods section
+    if method==None and re.search(alternate,text):
+        print(text)
+        print(methods[i])
+        print(re.search(alternate,text))
+        print('\n')
+        # print('found it')
+        # methods[i] = re.search('Design|method[\S \n]+Result',text)[0]
+        
+    # last resort, truncate the ~Introduction and ~Discussion, References sections
     if method==None:
         l = len(text)
-        methods[i] = text[round(l*.15):round(l*.65)]
-    elif re.search('method[\S \n]+Result',text):
-        # print('found it')
-        methods[i] = re.search('method[\S \n]+Result',text)
+        methods[i] = text
+
+    # otherwise, use the match from round 1
     else:
         methods[i] = methods[i][0]
 
-methods
+methods[:10]
 
-#%%
+#%% save data
 
 df['methods'] = methods
+
+df[['title','methods']].to_json(f'core-tutors-clean-{datetime.date.today()}.json')
 
 #%% get text from response
 
