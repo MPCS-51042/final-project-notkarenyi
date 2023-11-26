@@ -13,7 +13,7 @@ from tqdm import tqdm
 import json
 import re
 
-#%% get data
+#%% functions
 
 def query_api(endpoint, query, limit=100, is_scroll=False, scrollId=None):
     """
@@ -90,18 +90,29 @@ def scroll(endpoint, query, extract_info_callback=None):
         print(f"{count}/{totalhits} {elapsed}s")
     return allresults
 
-day = datetime.date.today() - datetime.timedelta(weeks=1)
-papers = scroll("search/works",f'high-school student achievement policy AND createdDate>={day}')
+day = datetime.date.today() - datetime.timedelta(weeks=24)
+
+query = f'(abstract:tutor OR abstract:paraprofessional) AND abstract:student AND createdDate>={day} AND language=English'
+
+#%% test
+
+# papers = query_api("search/works",query,limit=10)
+
+#%% get data
+
+papers = scroll("search/works",query)
 # print(papers['results'])
 
 #%% extract relevant info and save
 
 titles = [x['title'] for x in papers]
+abstracts = [x['abstract'] for x in papers]
 links = [x.get('url') for x in papers]
 text = [x['fullText'] for x in papers]
 
 df = pd.DataFrame({'title':titles,
+                   'abstract':abstracts,
                    'url':links,
                    'text':abstracts})
 
-# df.to_json(f'core-{datetime.date.today()}.json')
+df.to_json(f'core-tutors-{datetime.date.today()}.json')
