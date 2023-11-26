@@ -14,24 +14,36 @@ import numpy as np
 
 #%% read data
 
-df = pd.read_json('core-2023-11-25.json')
+df = pd.read_json('core-tutors-2023-11-25.json')
+
+# get paper-length papers
+df = df.loc[[len(x)>5000 for x in df['text']]]
+
+df = df.reset_index()
 
 #%% extract methods from full text
 
 # df['text_clean'] = [x]
 
-methods = df['text'][:20]
+# methods = df['text'][:20]
 
-methods = [re.search('(Method|Methods|Methodology)[\.: ]?[A-Za-z\d]+[\S \n]*Result',x) for x in methods]
+# remove table of contents
+methods = [re.sub('[TABLEOFCONTENTStableofcontents ]{17}.*[\. …]{5,}','',x) for x in df['text']]
+
+methods = [re.search('(Design|Method)[\S \n]+Result',x) for x in methods]
 
 methods
+
 #%%
 
 for i,method in enumerate(methods):
+    text = df['text'][i]
     if method==None:
-        text = df['text'][i]
         l = len(text)
         methods[i] = text[round(l*.15):round(l*.65)]
+    elif re.search('method[\S \n]+Result',text):
+        # print('found it')
+        methods[i] = re.search('method[\S \n]+Result',text)
     else:
         methods[i] = methods[i][0]
 
