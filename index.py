@@ -4,40 +4,12 @@ import pandas as pd
 import streamlit as st
 import numpy as np
 import requests
-# from pyalex import Works
 import datetime
-# from crossref.restful import Works, Etiquette
 from tqdm import tqdm
 import json
-
-#%% setup
-
-# pyalex.config.email = "notkarenyi@gmail.com"
-
-# my_etiquette = Etiquette('MPCS Final Project', 'v0', 'https://github.com/MPCS-51042/final-project-notkarenyi', 'karenyi@uchicago.edu')
-
-# works = Works(etiquette=my_etiquette)
-   
-params = {
-    # semantic scholar
-    # 'x-api-key':'1lYvegdgMq1ON1bVdEblh6hk98s7Ta7J3vt0wIKR',
-    # 'query':'high-school student achievement policy',
-    # 'publicationDateOrYear':f'{date.today().year}-{date.today().month}'
-
-    # springer
-    # 'api_key':
-    # 'q': 'high-school student achievement policy'
-}
+import re
 
 #%% get data
-
-# response = requests.get('http://api.semanticscholar.org/graph/v1/paper/search?',params=params)
-
-# response = requests.get('http://api.springernature.com/openaccess',params=params)
-
-# response = works.query(bibliographic='education achievement policy').filter(from_created_date=date(2023,11,1),has_full_text='true',type='journal-article')
-
-# print(response.count())
 
 def query_api(endpoint, query, limit=100, is_scroll=False, scrollId=None):
     """
@@ -114,7 +86,6 @@ def scroll(endpoint, query, extract_info_callback=None):
         print(f"{count}/{totalhits} {elapsed}s")
     return allresults
 
-
 day = datetime.date.today() - datetime.timedelta(weeks=1)
 papers = scroll("search/works",f'high-school student achievement policy AND createdDate>={day}')
 # print(papers['results'])
@@ -123,13 +94,36 @@ papers = scroll("search/works",f'high-school student achievement policy AND crea
 
 titles = [x['title'] for x in papers]
 links = [x.get('url') for x in papers]
-abstracts = [x['fullText'] for x in papers]
+text = [x['fullText'] for x in papers]
 
 df = pd.DataFrame({'title':titles,
                    'url':links,
-                   'abstract':abstracts})
+                   'text':abstracts})
 
-df.to_json('core-112523.json')
+# df.to_json(f'core-{datetime.date.today()}.json')
+
+#%%
+
+df = pd.read_json('core-2023-11-25.json')
+
+#%%
+
+# df['text'][:10]
+
+methods = [re.search('Method[\S \n]*Result',x) for x in df['text']]
+
+methods
+#%%
+
+for i,method in enumerate(methods):
+    if method==None:
+        text = df['text'][i]
+        l = len(text)
+        methods[i] = text[round(l*.15):round(l*.65)]
+    else:
+        methods[i] = methods[i][0]
+
+methods
 
 #%% get text from response
 
