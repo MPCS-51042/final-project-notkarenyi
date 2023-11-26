@@ -1,20 +1,22 @@
-#%%
+#%% import
 
 import pandas as pd
 import streamlit as st
 import numpy as np
 import requests
 # from pyalex import Works
-from datetime import date
-from crossref.restful import Works, Etiquette
+import datetime
+# from crossref.restful import Works, Etiquette
 from tqdm import tqdm
 import json
 
-#%%
+#%% setup
 
 # pyalex.config.email = "notkarenyi@gmail.com"
 
-my_etiquette = Etiquette('MPCS Final Project', 'v0', 'https://github.com/MPCS-51042/final-project-notkarenyi', 'karenyi@uchicago.edu')
+# my_etiquette = Etiquette('MPCS Final Project', 'v0', 'https://github.com/MPCS-51042/final-project-notkarenyi', 'karenyi@uchicago.edu')
+
+# works = Works(etiquette=my_etiquette)
    
 params = {
     # semantic scholar
@@ -25,40 +27,111 @@ params = {
     # springer
     # 'api_key':
     # 'q': 'high-school student achievement policy'
-    
-    # core
-    'api_key': ''
 }
+
+#%% get data
 
 # response = requests.get('http://api.semanticscholar.org/graph/v1/paper/search?',params=params)
 
-# works = Works(etiquette=my_etiquette)
-
 # response = requests.get('http://api.springernature.com/openaccess',params=params)
 
+# response = works.query(bibliographic='education achievement policy').filter(from_created_date=date(2023,11,1),has_full_text='true',type='journal-article')
 
-def query_api(url_fragment, query,limit=100):
+# print(response.count())
+
+def query_api(endpoint, query, limit=100, is_scroll=False, scrollId=None):
+    """
+    Query CORE API for papers matching a query
+
+    Params:
+        endpoint (str):
+            URL endpoint to specify
+        query (str):
+            Google-like query to search for relevant papers
+        limit (int):
+            Max of 100, how many papers to return?
+        is_scroll (bool):
+            Are we scrolling?
+        scrollId (int):
+            Scroll position
+
+    Return:
+        json (dict-like) of API response (access ['results'] for results)
+        time elapsed (seconds)
+    
+    Source: 
+        https://github.com/oacore/apiv3-webinar/blob/main/webinar.ipynb
+    """
+
     headers={"Authorization":"Bearer "+'BhtARGyaxXQ0INUjqKc5LSVprPCiuYFT'}
     
     query = {"q":query, "limit":limit}
 
-    response = requests.post(f'https://api.core.ac.uk/v3/{url_fragment}',data = json.dumps(query), headers=headers)
+    # scrolling through results max 100 at a time
+    if not scrollId:
+        query["scroll"]="true"
+    elif is_scroll:
+        query["scrollId"]=scrollId
 
-    if response.status_code == 200:
+    # API call
+    response = requests.post(f'https://api.core.ac.uk/v3/{endpoint}',data = json.dumps(query), headers=headers)
+
+    if response.status_code ==200:
         return response.json(), response.elapsed.total_seconds()
     else:
         print(f"Error code {response.status_code}, {response.content}")
 
-data_provider, elapsed = query_api("search/data-providers")
-print(json.dumps(data_provider),indent=2)
+def scroll(endpoint, query, extract_info_callback=None):
+    """
+    Query CORE API, while scrolling through results.
+
+    Params:
+        endpoint (str):
+            URL endpoint to specify
+        query (str):
+            Google-like query to search for relevant papers
+
+    Source:
+        https://github.com/oacore/apiv3-webinar/blob/main/webinar.ipynb
+    """
+
+    allresults = []
+    count = 0
+    scrollId=None
+    while True:
+        result, elapsed =query_api(endpoint, query, is_scroll=True, scrollId=scrollId)
+        scrollId=result["scrollId"]
+        totalhits = result["totalHits"]
+        result_size = len(result["results"])
+        if result_size==0:
+            break
+        for hit in result["results"]:
+            if extract_info_callback:
+              allresults.append(extract_info_callback(hit))
+            else:
+              allresults.append(hit)
+        count+=result_size
+        print(f"{count}/{totalhits} {elapsed}s")
+    return allresults
+
+
+day = datetime.date.today() - datetime.timedelta(weeks=1)
+papers = scroll("search/works",f'high-school student achievement policy AND createdDate>={day}')
+# print(papers['results'])
 
 #%%
 
-# response = works.query(bibliographic='education achievement policy').filter(from_created_date=date(2023,11,1),has_full_text='true',type='journal-article')
+titles = [x['title'] for x in papers]
+links = [x.get('url') for x in papers]
+abstracts = [x['fullText'] for x in papers]
 
-print(response.count())
+df = pd.DataFrame({'title':titles,
+                   'url':links,
+                   'abstract':abstracts})
 
-#%%
+df.to_json('core-112523.json')
+
+#%% get text from response
 
 def chunk(lst,n):
     """
@@ -70,18 +143,13 @@ def chunk(lst,n):
     for i in range(0,len(lst),n):
         yield lst[i:i+n]
 
-for i,chunk in enumerate(response):
-    if i<5:
-        print(chunk.get('abstract'))
-        if chunk.get('abstract'):
+for i,chunk in enumerate(papers['results']):
+    if i<100:
+        print(chunk.get('fullText'))
+        if chunk.get('fullText'):
             print(chunk.keys())
     else:
         break
-
-#%%
-
-for i in response:
-    print(i)
 
 #%% streamlit app
 
