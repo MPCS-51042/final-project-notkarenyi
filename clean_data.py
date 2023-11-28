@@ -23,56 +23,86 @@ df = df.loc[df['len']>20000]
 
 df = df.reset_index()
 
-#%% extract methods and results from full text
+#%% get rid of everything before abstract and after references
 
-# df['text_clean'] = [x]
+# remove table of contents
+df['text_clean'] = [re.sub('^[A-Z][\S ]+([\.…] *){10,}\d+','',x) for x in df['text']]
+
+# remove everything before abstract (any titles, acknowledgments)
+df['text_clean'] = [re.sub('^[\S \n]*(Abstract|ABSTRACT)','Abstract',x) for x in df['text_clean']]
+
+# remove everything after references
+df['text_clean'] = [re.sub('(References|REFERENCES)[\S \n]*$','References',x) for x in df['text_clean']]
+
+# remove table of contents again if it didn't work the first time
+# for 
+
+# df['text_clean'] = [len(re.findall('\d',x))/len(x) for x in df['results']]
+
+print(df['text_clean'][:10])
+
+print([len(x) for x in df['text_clean'][:10]])
 
 # methods = df['text'][:20]
 
+#%% extract methods and results from full text
+
 def truncate(text,start=.15,end=.8):
-     return text[round(len(text)*start):round(len(text)*end)]
+    return text[round(len(text)*start):round(len(text)*end)]
 
-# remove table of contents
-methods = [re.sub('[TABLEOFCONTENTStableofcontents ]{17}.*[\. …]{5,}','',x) for x in df['text']]
+def find_section(df, primary='',secondary='',run_length=100000):
+    
+    # does the first pass work?
+    methods = [re.search(primary,x) for x in df['text_clean']]
 
-# cut as much of intro and references as possible
-methods = [truncate(t) for t in methods ]
+    for i,method in enumerate(methods):
+        text = df['text_clean'][i]
 
-methods = [re.search('(Method|Research method)[\S \n]+(Discussion|Conclusion)',x) for x in methods]
+        # try alternate names for methods section
+        if method==None and re.search(secondary,text):
+            print(text)
+            print(methods[i])
+            print(re.search(secondary,text))
+            print('\n')
+            # methods[i] = re.search('Design|method[\S \n]+Result',text)[0]
+            
+        # last resort, truncate the ~Introduction and ~Discussion, References sections
+        if method==None:
+            methods[i] = truncate(text,.05,.8)
 
-methods[:10]
+        # otherwise, use the match from round 1
+        else:
+            methods[i] = methods[i][0]
 
-#%% 
+    return methods
 
-alternate = '(Design|and method)[\S \n]+(Discussion|Conclusion)'
-run_length = 100000
+df['methods_results'] = find_section(df, 
+                             primary='(Method|Research method).*(Discussion|Conclusion)',
+                             secondary='(Design|and method).*(Discussion|Conclusion)')
 
-for i,method in enumerate(methods[:run_length]):
-    text = df['text'][i]
+print(df['methods_results'][:10])
 
-    # try alternate names for methods section
-    if method==None and re.search(alternate,text):
-        print(text)
-        print(methods[i])
-        print(re.search(alternate,text))
-        print('\n')
-        # print('found it')
-        # methods[i] = re.search('Design|method[\S \n]+Result',text)[0]
-        
-    # last resort, truncate the ~Introduction and ~Discussion, References sections
-    if method==None:
-        l = len(text)
-        methods[i] = text
+# (.{10,50}\d+){5,}
 
-    # otherwise, use the match from round 1
-    else:
-        methods[i] = methods[i][0]
+#%%
 
-methods[:10]
+df['methods'] = [re.search('^.*(Result|Analysis)',x) for x in df['methods_results']]
+df['methods'] = [x[0] if not x==None else 'NA' for x in df['methods']]
+
+print(df['methods'][:10])
+
+df['results'] = [re.search('(Result|Analysis).*$',x) for x in df['methods_results']]
+df['results'] = [x[0] if not x==None else 'NA' for x in df['results']]
+
+print(df['results'][:10])
+
+#%%
+
+df['p_digits'] = [len(re.findall('\d',x))/len(x) for x in df['results']]
+
+print(df['p_digits'][:10])
 
 #%% save data
-
-df['methods'] = methods
 
 df[['title','methods']].to_json(f'core-tutors-clean-{datetime.date.today()}.json')
 
