@@ -14,7 +14,7 @@ import re
 
 #%% import data
 
-df = pd.read_json('core-tutors-clean-2023-11-26.json')
+df = pd.read_json('core-tutors-clean-2023-11-28.json')
 
 #%%
 
@@ -32,7 +32,7 @@ title = 'Effectiveness of tutoring'
 st.sidebar.markdown(f'[{title}](#{"-".join(title.lower().split(" "))})')
 
 for i,row in df.iterrows():
-    st.sidebar.markdown(f'[{row["title"]}](#{"-".join(remove_punc(row["title"]).lower().split(" "))})')
+    st.sidebar.markdown(f'[{" ".join(row["title"].split(" ")[:5])}...](#{"-".join(remove_punc(row["title"]).lower().split(" "))})')
 
 # main section
 
