@@ -96,15 +96,115 @@ df['results'] = [x[0] if not x==None else 'NA' for x in df['results']]
 
 print(df['results'][:10])
 
+#%% get conclusion
+
+df['conclusion'] = [re.search('(Conclusion).*$',x) for x in df['text_clean']]
+df['conclusion'] = [x[0] if not x==None else 'NA' for x in df['conclusion']]
+
+print(df['conclusion'][:10])
+
+#%% sentence-level TF IDF
+
+from nltk.tokenize import regexp_tokenize, sent_tokenize
+from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
+from nltk.corpus import stopwords
+
+stop_words = set(stopwords.words('english'))
+
+def stfidf(text):
+    """
+    source: https://medium.com/@ashins1997/text-summarization-f2542bc6a167
+    """
+
+    sentences = sent_tokenize(text)
+    tfidf = TfidfVectorizer()
+    result = tfidf.fit_transform(sentences)
+
+    wtfidf = {}
+    for word,score in zip(tfidf.get_feature_names_out(), tfidf.idf_):
+        wtfidf[word] = score
+
+    # print(wtfidf)
+    print(text)
+
+    stfidf = {}
+    cv = CountVectorizer()
+
+    for s in sentences:
+        # words = word_tokenize(s,r'\w{2,}')
+        # words = [w.lower() for w in words if (not w.lower() in stop_words and w.isalpha())]
+    
+        if len(s)>10:
+            try: 
+                result = cv.fit_transform([s])
+                words = cv.get_feature_names_out()
+                stfidf[s] = sum([wtfidf[x] for x in words])
+            except Exception as e:
+                print(s)
+                print(wtfidf.keys())
+                print(words)
+                print(e)
+                stfidf[s] = 0
+                continue
+
+    return stfidf
+
+# create column where each entry is a stfidf dict mapping sentences to importance scores
+sentence_tfidf = [stfidf(x) for x in df['conclusion']]
+
+sentence_tfidf
+
+#%% sort sentences by importance
+
+# source: https://stackoverflow.com/questions/613183/how-do-i-sort-a-dictionary-by-value
+
+threshold = .8
+
+# only get most important sentences
+df['display'] = [[k for k,v in x.items() if v>(max(x.values())*threshold)] for x in sentence_tfidf]
+
 #%%
 
-df['p_digits'] = [len(re.findall('\d',x))/len(x) for x in df['results']]
+# df['p_digits'] = [len(re.findall('\d',x))/len(x) for x in df['results']]
 
-print(df['p_digits'][:10])
+# print(df['p_digits'][:10])
+
+#%% topic modeling/clustering
+
+# from bertopic import BERTopic
+
+#%%
+
+# import requests
+# import json
+
+# url = "https://projects.laion.ai/api/v1/tasks/"
+
+# payload = json.dumps({
+#   "type": "summarize_story",
+#   "user": {
+#     "id": "687886868099891222",
+#     "display_name": "notkarenyi",
+#     "auth_method": "discord"
+#   },
+#   "collective": False,
+#   "lang": "en"
+# })
+
+# headers = {
+#   'Content-Type': 'application/json',
+#   'Accept': 'application/json'
+# }
+
+# response = requests.request("POST", 
+#                             url, headers=headers,
+#                             data=payload)
+
+# print(response.text)
 
 #%% save data
 
-df[['title','methods']].to_json(f'core-tutors-clean-{datetime.date.today()}.json')
+df[['title','abstract','display']].to_json(f'core-tutors-clean-{datetime.date.today()}.json')
 
 #%% get text from response
 
