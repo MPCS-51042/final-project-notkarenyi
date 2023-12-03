@@ -14,7 +14,7 @@ import re
 
 #%% import data
 
-df = pd.read_json('core-tutors-clean-2023-11-28.json')
+df = pd.read_json('core-tutors-clean-2023-12-03.json')
 
 #%%
 
@@ -44,6 +44,6 @@ main.markdown('\n\n\n\n\n\n\n\n\n\nsdfsdf')
 
 for i,row in df.iterrows():
     main.markdown(f'### {row["title"]}')
-    main.markdown(f'{row["methods"][:1000]}')
+    main.markdown(f'{" ".join(row["display"])}')
 
 extra.markdown('Here is extra content')
