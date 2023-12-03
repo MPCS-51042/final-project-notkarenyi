@@ -1,5 +1,8 @@
-# Final projects
-A manifesto for the replacement of some types of journal articles, such as literature reviews, with the purpose of de-emphasizing individual studies in favor of reviews and the end goal of mitigating replication crises. **Case study: most effective policies to increase student achievement**
+# Final project
+A manifesto for the replacement of some types of journal articles, such as literature reviews, with the purpose of de-emphasizing individual studies in favor of meta-analyses and the end goal of mitigating replication crises. 
+
+**Case study: evaluate effectiveness of tutoring to increase student achievement**
+
 1. Most of the time, quality literature reviews on a certain topic rely on the initiative of individuals to conduct a broad overview of their field. Even these can be relatively indigestible, to researchers but also to the broader public. Medium has the correct level of accessibility, but is less good in terms of rigor and credibility. Journals have the reverse problem. Additionally, one of the greater problems in online educational/expository resources is lack of ability to adapt to the audience level, in the way that an individual mentor could. That sense of powerlessness one gets at being told to “search the internet” to find out about a topic…Is it just AI-powered searching that we need? Or a complete rethinking of the way we organize reference content on the web?
 2. Specifications
    1. open source - live document that is updated frequently by many experts (GitHub Pages)
