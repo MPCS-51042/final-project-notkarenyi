@@ -16,34 +16,44 @@ import re
 
 df = pd.read_json('core-tutors-clean-2023-12-03.json')
 
-#%%
+#%% 
 
-def remove_punc(x):
-    return re.sub('\\'.join(string.punctuation),'',x)
+def md_link(x):
+    punc = '\\'.join(string.punctuation)
+    no_punc = re.sub(f"[{punc}]",'',x.lower())
+    words = re.split(r' +',no_punc)
+    return f'#{"-".join(words)}'
+
+def title_case(s):
+    return f'{s[0]}{s[1:].lower()}'
 
 #%% streamlit app
 
 st.markdown('# Living literature review')
 
-title = 'Effectiveness of tutoring'
+page_title = 'Effectiveness of tutoring'
 
 # sidebar section
 
-st.sidebar.markdown(f'[{title}](#{"-".join(title.lower().split(" "))})')
+st.sidebar.markdown(f'[{page_title}]({md_link(page_title)})')
 
 for i,row in df.iterrows():
-    st.sidebar.markdown(f'[{" ".join(row["title"].split(" ")[:5])}...](#{"-".join(remove_punc(row["title"]).lower().split(" "))})')
+    title = title_case(row["title"])
+    st.sidebar.markdown(f'[{" ".join(title.split(" ")[:5])}...]({md_link(title)})')
 
 # main section
 
 main, extra = st.columns([.7,.3])
 
-main.markdown(f'## {title}')
+main.markdown(f'## {page_title}')
 
-main.markdown('\n\n\n\n\n\n\n\n\n\nsdfsdf')
+main.markdown('This app attempts to do the following:')
 
 for i,row in df.iterrows():
-    main.markdown(f'### {row["title"]}')
-    main.markdown(f'{" ".join(row["display"])}')
+    main.markdown(f'### {title_case(row["title"])}')
+    display = re.sub('(\.\.\. ){2,}',
+                     '',
+                     ' '.join(row['display']))
+    main.markdown(display)
 
 extra.markdown('Here is extra content')
