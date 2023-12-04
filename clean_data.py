@@ -1,8 +1,8 @@
 """
 Author: Karen Yi
-Updated: 11/2023
+Updated: 12/2023
 
-Process pre-gathered data 
+Process pre-gathered data using various NLP techniques.
 
 """
 
@@ -17,7 +17,8 @@ import datetime
 
 df = pd.read_json('core-tutors-2023-11-26.json')
 
-# get paper-length papers
+# which entries are long enough to be a paper?
+
 df['len'] = [len(x) if not x==None else 0 for x in df['text']]
 df = df.loc[df['len']>20000]
 
@@ -35,7 +36,6 @@ df['text_clean'] = [re.sub('^[\S \n]*(Abstract|ABSTRACT)','Abstract',x) for x in
 df['text_clean'] = [re.sub('(References|REFERENCES)[\S \n]*$','References',x) for x in df['text_clean']]
 
 # remove table of contents again if it didn't work the first time
-# for 
 
 # df['text_clean'] = [len(re.findall('\d',x))/len(x) for x in df['results']]
 
@@ -84,7 +84,7 @@ print(df['methods_results'][:10])
 
 # (.{10,50}\d+){5,}
 
-#%%
+#%% separate methods and results
 
 df['methods'] = [re.search('^.*(Result|Analysis)',x) for x in df['methods_results']]
 df['methods'] = [x[0] if not x==None else 'NA' for x in df['methods']]
@@ -113,33 +113,52 @@ stop_words = set(stopwords.words('english'))
 
 def stfidf(text):
     """
-    source: https://medium.com/@ashins1997/text-summarization-f2542bc6a167
+    Construct a sentence-level TF-IDF where the numerator is related to the number
+    of times a word appears in a sentence and the denominator is related to the 
+    number of times a word appears in the document overall.
+
+    Higher score 
+
+    Params:
+        text (str): document to parse
+
+    Return:
+
+
+    Source: https://medium.com/@ashins1997/text-summarization-f2542bc6a167
     """
 
+    # separate string into sentences
     sentences = sent_tokenize(text)
+
+    # get word level TDIDF
     tfidf = TfidfVectorizer()
     result = tfidf.fit_transform(sentences)
 
+    # map words to their scores
     wtfidf = {}
     for word,score in zip(tfidf.get_feature_names_out(), tfidf.idf_):
         wtfidf[word] = score
 
     # print(wtfidf)
-    print(text)
+    # print(text)
 
+    # initialize sentence-level TFIDF
     stfidf = {}
-    cv = CountVectorizer()
 
+    # use the same tokenizer as for TFIDF to get the words per sentence
+    cv = CountVectorizer()
     for s in sentences:
-        # words = word_tokenize(s,r'\w{2,}')
-        # words = [w.lower() for w in words if (not w.lower() in stop_words and w.isalpha())]
     
+        # if we have a long enough sentence, over 10 chars:
         if len(s)>10:
             try: 
                 result = cv.fit_transform([s])
                 words = cv.get_feature_names_out()
+                # sum the importance of each sentence via the word level TFIDF
                 stfidf[s] = sum([wtfidf[x] for x in words])
             except Exception as e:
+                # catch and examine errors
                 print(s)
                 print(wtfidf.keys())
                 print(words)
@@ -160,8 +179,9 @@ sentence_tfidf
 
 threshold = .8
 
-# only get most important sentences
-df['display'] = [[k for k,v in x.items() if v>(max(x.values())*threshold)] for x in sentence_tfidf]
+# get most important sentences
+# use ellipsis as placeholder for skipped sentences
+df['display'] = [[k if v>(max(x.values())*threshold) else '...' for k,v in x.items()] for x in sentence_tfidf]
 
 #%%
 
@@ -173,55 +193,6 @@ df['display'] = [[k for k,v in x.items() if v>(max(x.values())*threshold)] for x
 
 # from bertopic import BERTopic
 
-#%%
-
-# import requests
-# import json
-
-# url = "https://projects.laion.ai/api/v1/tasks/"
-
-# payload = json.dumps({
-#   "type": "summarize_story",
-#   "user": {
-#     "id": "687886868099891222",
-#     "display_name": "notkarenyi",
-#     "auth_method": "discord"
-#   },
-#   "collective": False,
-#   "lang": "en"
-# })
-
-# headers = {
-#   'Content-Type': 'application/json',
-#   'Accept': 'application/json'
-# }
-
-# response = requests.request("POST", 
-#                             url, headers=headers,
-#                             data=payload)
-
-# print(response.text)
-
 #%% save data
 
 df[['title','abstract','display']].to_json(f'core-tutors-clean-{datetime.date.today()}.json')
-
-#%% get text from response
-
-def chunk(lst,n):
-    """
-    Yield n-sized chunks from a list
-
-    https://www.geeksforgeeks.org/break-list-chunks-size-n-python/
-    """
-
-    for i in range(0,len(lst),n):
-        yield lst[i:i+n]
-
-# for i,chunk in enumerate(papers['results']):
-#     if i<100:
-#         print(chunk.get('fullText'))
-#         if chunk.get('fullText'):
-#             print(chunk.keys())
-#     else:
-#         break
