@@ -18,89 +18,102 @@ import datetime
 df = pd.read_json('core-tutors-2023-11-26.json')
 
 # which entries are long enough to be a paper?
-
 df['len'] = [len(x) if not x==None else 0 for x in df['text']]
 df = df.loc[df['len']>20000]
 
 df = df.reset_index()
 
-#%% get rid of everything before abstract and after references
+#%% clean titles
+
+# remove extra spaces
+df['title'] = [re.sub(' {2,}|\n','',x) for x in df['title']]
+
+#%% preprocessing text by truncating as much as possible
+
+def construct_re(start, end, mid='.'):
+    # use given and uppercase variants of a regular expression
+    return f'({start}|{start.upper()}){mid}*({end}|{end.upper()})'
 
 # remove table of contents
 df['text_clean'] = [re.sub('^[A-Z][\S ]+([\.…] *){10,}\d+','',x) for x in df['text']]
+df['text_clean'] = [re.sub(construct_re('Table of contents|Table of Contents','(\. ?){3,}|…'),'',x) for x in df['text_clean']]
+
+print(len(df['text_clean'][23]))
 
 # remove everything before abstract (any titles, acknowledgments)
-df['text_clean'] = [re.sub('^[\S \n]*(Abstract|ABSTRACT)','Abstract',x) for x in df['text_clean']]
+df['text_clean'] = [re.sub(construct_re('^','Abstract',mid='[\S \n]'),'',x) for x in df['text_clean']]
 
-# remove everything after references
-df['text_clean'] = [re.sub('(References|REFERENCES)[\S \n]*$','References',x) for x in df['text_clean']]
+print(len(df['text_clean'][23]))
+
+# remove everything after references or acknowledgments
+df['text_clean'] = [x[:10000] + re.sub(construct_re('(References|Acknowledgements)','$',mid='[\S \n]'),'\1',x[10000:]) for x in df['text_clean']]
+
+print(len(df['text_clean'][23]))
 
 # remove table of contents again if it didn't work the first time
-
 # df['text_clean'] = [len(re.findall('\d',x))/len(x) for x in df['results']]
 
 print(df['text_clean'][:10])
-
-print([len(x) for x in df['text_clean'][:10]])
+print([len(x) for x in df['text_clean']])
 
 # methods = df['text'][:20]
 
 #%% extract methods and results from full text
 
 def truncate(text,start=.15,end=.8):
+    # cut off text at start and end percentages
     return text[round(len(text)*start):round(len(text)*end)]
 
-def find_section(df, primary='',secondary='',run_length=100000):
+def find_section(docs, start='', end='', start_p=.05, end_p=.95):
+    """
+    Separate a specific section of text out of a document for each document
+    in a corpus
+
+    Note that re.match OR operators evaluate in order: 
+    https://stackoverflow.com/questions/35606426/order-of-regular-expression-operator
     
-    # does the first pass work?
-    methods = [re.search(primary,x) for x in df['text_clean']]
+    Params:
+        docs (list): 
+            corpus of string documents
+        start (str): 
+            start of search regex, usually a heading
+        end (str):
+            end of search regex, usually a heading
+        start_p (int): 
+            beginning percentage at which text should be truncated as last resort
+        end_p (int): 
+            ending percentage at which text should be truncated as last resort
+    """
+    
+    search = construct_re(start,end)
+    search_results = [re.search(search,x) for x in docs]
 
-    for i,method in enumerate(methods):
-        text = df['text_clean'][i]
+    # last resort, locate section by approximate location in document
+    section = [truncate(docs[i],start_p,end_p) if result==None else result[0] for i,result in enumerate(search_results)]
 
-        # try alternate names for methods section
-        if method==None and re.search(secondary,text):
-            print(text)
-            print(methods[i])
-            print(re.search(secondary,text))
-            print('\n')
-            # methods[i] = re.search('Design|method[\S \n]+Result',text)[0]
-            
-        # last resort, truncate the ~Introduction and ~Discussion, References sections
-        if method==None:
-            methods[i] = truncate(text,.05,.8)
+    return section
 
-        # otherwise, use the match from round 1
-        else:
-            methods[i] = methods[i][0]
+# note that text_clean is already stripped of TOC, abstract, and references
 
-    return methods
-
-df['methods_results'] = find_section(df, 
-                             primary='(Method|Research method).*(Discussion|Conclusion)',
-                             secondary='(Design|and method).*(Discussion|Conclusion)')
-
-print(df['methods_results'][:10])
-
-# (.{10,50}\d+){5,}
-
-#%% separate methods and results
-
-df['methods'] = [re.search('^.*(Result|Analysis)',x) for x in df['methods_results']]
-df['methods'] = [x[0] if not x==None else 'NA' for x in df['methods']]
-
+df['methods'] = find_section(df['text_clean'], 
+                             start='Method|Research method|Design|and method',
+                             end='Result|Analysis',
+                             start_p=.2,
+                             end_p=.6)
 print(df['methods'][:10])
 
-df['results'] = [re.search('(Result|Analysis).*$',x) for x in df['methods_results']]
-df['results'] = [x[0] if not x==None else 'NA' for x in df['results']]
-
+df['results'] = find_section(df['text_clean'], 
+                             start='Result|Analysis', 
+                             end='Discussion|Conclusion',
+                             start_p=.5,
+                             end_p=.8)
 print(df['results'][:10])
 
-#%% get conclusion
-
-df['conclusion'] = [re.search('(Conclusion).*$',x) for x in df['text_clean']]
-df['conclusion'] = [x[0] if not x==None else 'NA' for x in df['conclusion']]
-
+df['conclusion'] = find_section(df['text_clean'], 
+                             start='Discussion|Conclusion', 
+                             end='$',
+                             start_p=.7,
+                             end_p=1)
 print(df['conclusion'][:10])
 
 #%% sentence-level TF IDF
@@ -123,7 +136,7 @@ def stfidf(text):
         text (str): document to parse
 
     Return:
-
+        (dict): mapping sentences to importance scores
 
     Source: https://medium.com/@ashins1997/text-summarization-f2542bc6a167
     """
@@ -151,7 +164,7 @@ def stfidf(text):
     for s in sentences:
     
         # if we have a long enough sentence, over 10 chars:
-        if len(s)>10:
+        if len(s)>30:
             try: 
                 result = cv.fit_transform([s])
                 words = cv.get_feature_names_out()
@@ -160,8 +173,7 @@ def stfidf(text):
             except Exception as e:
                 # catch and examine errors
                 print(s)
-                print(wtfidf.keys())
-                print(words)
+                # print(wtfidf.keys())
                 print(e)
                 stfidf[s] = 0
                 continue
