@@ -3,8 +3,10 @@ A manifesto for the replacement of some types of journal articles, such as liter
 
 **Case study: evaluate effectiveness of tutoring to increase student achievement**
 
-1. Most of the time, quality literature reviews on a certain topic rely on the initiative of individuals to conduct a broad overview of their field. Even these can be relatively indigestible, to researchers but also to the broader public. Medium has the correct level of accessibility, but is less good in terms of rigor and credibility. Journals have the reverse problem. Additionally, one of the greater problems in online educational/expository resources is lack of ability to adapt to the audience level, in the way that an individual mentor could. That sense of powerlessness one gets at being told to “search the internet” to find out about a topic…Is it just AI-powered searching that we need? Or a complete rethinking of the way we organize reference content on the web?
-2. Specifications
+Most of the time, quality literature reviews on a certain topic rely on the initiative of individuals to conduct a broad overview of their field. Even these can be relatively indigestible, to researchers but also to the broader public. Medium has the correct level of accessibility, but is less good in terms of rigor and credibility. Journals have the reverse problem. Additionally, one of the greater problems in online educational/expository resources is lack of ability to adapt to the audience level, in the way that an individual mentor could. That sense of powerlessness one gets at being told to “search the internet” to find out about a topic…Is it just AI-powered searching that we need? Or a complete rethinking of the way we organize reference content on the web?
+
+## Specifications
+
    1. open source - live document that is updated frequently by many experts (GitHub Pages)
    2. readers/users can leave feedback directly on the project (how to quality control?)
    3. accessible - language is analyzed for legibility to non-expert audiences (`py-readability-metrics`). 
@@ -16,10 +18,15 @@ A manifesto for the replacement of some types of journal articles, such as liter
    9. narrative and/or standardized organization - one nice thing about journal articles currently is that you know what to expect and where to find certain types of information. narrative structure, with examples, is important for comprehension and retention???? 
    10. audience adaptability - show or hide sections or label on a "need-to-know" basis
        1. left panel with outline hyperlinks for center panel: BEGINNER, INTERMEDIATE, EXPERT levels of explanation???? some innovative way of linking articles possibly link related individual studies with high h factor (maybe knowledge graph ...?) 
-       2. right panel - temporarily open related articles could be summary versions? similar to wikipediaor maybe right panel can be more detailed expansion of whatever’s on the left
+       2. right panel - temporarily open related articles, could be summary versions? similar to Wikipedia or maybe right panel can be more detailed expansion of whatever's on the left
 
-3.  Every month, get the top 10 newest, most cited papers in student achievement from **OpenAlex API**. Using **pypdf2**, read in files and using **re** or LLM API, find the main variables, methods, populations, findings of the paper. (Try the Cochrane meta analysis standards as a guide.) Ideally, these would sit in a repository until a human is able to review these (human in the loop design). 
-4. Or, assuming, you already have a meta-analysis, focus on editing and presenting it for public consumption. Summarize on 3 levels using **LLM API**. Create a web app including visualizations using **pandas** and **streamlit**.
+## Approach
+
+1. Every month, get the top 10 newest, most cited papers in student achievement from CORE API. 
+
+2. Read in files and using `re` or LLM API, find the main variables, methods, populations, findings of the paper. (Try the Cochrane meta analysis standards as a guide.) 
+
+3. Ideally, these would sit in a repository until a human is able to review (human in the loop design). 
 
 ## To-do list
 
