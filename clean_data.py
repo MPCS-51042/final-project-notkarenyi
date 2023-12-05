@@ -3,7 +3,6 @@ Author: Karen Yi
 Updated: 12/2023
 
 Process pre-gathered data using various NLP techniques.
-
 """
 
 #%% import
@@ -15,7 +14,7 @@ import datetime
 
 #%% read data
 
-df = pd.read_json('core-tutors-2023-11-26.json')
+df = pd.read_json('core-tutors-2023-12-05.json')
 
 # which entries are long enough to be a paper?
 df['len'] = [len(x) if not x==None else 0 for x in df['text']]
@@ -144,7 +143,7 @@ def stfidf(text):
     # separate string into sentences
     sentences = sent_tokenize(text)
 
-    # get word level TDIDF
+    # get word level TFIDF
     tfidf = TfidfVectorizer()
     result = tfidf.fit_transform(sentences)
 

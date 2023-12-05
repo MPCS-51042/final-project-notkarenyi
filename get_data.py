@@ -2,7 +2,7 @@
 Author: Karen Yi
 Updated: 11/2023
 
-Gather full-text data about high-school student achievement from CORE API on a weekly basis.
+Gather full-text data about high-school student achievement from CORE API on a semi annual basis.
 """
 #%% import
 
