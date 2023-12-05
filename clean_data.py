@@ -195,16 +195,17 @@ threshold = .8
 # use ellipsis as placeholder for skipped sentences
 df['display'] = [[k if v>(max(x.values())*threshold) else '...' for k,v in x.items()] for x in sentence_tfidf]
 
-#%%
+# flatten into string
+df['display'] = [re.sub('(\.\.\. ){2,}','', ' '.join(x)) for x in df['display']]
 
-# df['p_digits'] = [len(re.findall('\d',x))/len(x) for x in df['results']]
+#%% readability scoring
 
-# print(df['p_digits'][:10])
+from readability import Readability
 
-#%% topic modeling/clustering
+df = df.loc[[len(x.split(' '))>100 for x in df['display']]]
 
-# from bertopic import BERTopic
+df['readability'] = [Readability(x).flesch_kincaid().grade_level for x in df['display']]
 
 #%% save data
 
-df[['title','abstract','display']].to_json(f'core-tutors-clean-{datetime.date.today()}.json')
+df[['title','abstract','display','readability']].to_json(f'core-tutors-clean-{datetime.date.today()}.json')
